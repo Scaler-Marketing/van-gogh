@@ -70,31 +70,36 @@ class OSDMeasure {
         // temporarily stores undone measurements
         this.redoStack = [];
 
-        // initialize databasse
-        this.db = new DexieWrapper(this);
+        try {
+            // initialize databasse
+            this.db = new DexieWrapper(this);
 
-        // add our custom handler for measurements
-        this.viewer.addHandler('canvas-double-click', (event) => {
-            this.addMeasurement(event);
-            if (!event.quick) {
-                event.preventDefaultAction = true;
-            }
-        });
+            // add our custom handler for measurements
+            this.viewer.addHandler('canvas-double-click', (event) => {
+                this.addMeasurement(event);
+                if (!event.quick) {
+                    event.preventDefaultAction = true;
+                }
+            });
 
-        // re-render on page event (change in zoom)
-        this.viewer.addHandler('zoom', this.adjustToZoom.bind(this));
+            // re-render on page event (change in zoom)
+            this.viewer.addHandler('zoom', this.adjustToZoom.bind(this));
 
-        // re-render on rotation
-        this.viewer.addHandler('rotate', () => {
-            this.viewer.viewport.rotateTo(0);
-        })
+            // re-render on rotation
+            this.viewer.addHandler('rotate', () => {
+                this.viewer.viewport.rotateTo(0);
+            })
 
-        // dispatch correct method on key press
-        document.addEventListener('keydown', (event) => {
-            this.handleKeyPress(event);
-        });
+            // dispatch correct method on key press
+            document.addEventListener('keydown', (event) => {
+                this.handleKeyPress(event);
+            });
 
-        this.loadFromLocalStorage();
+            this.loadFromLocalStorage();
+        }
+        catch(error){
+            console.error('Error loading measurements:', error);
+        }
     }
 
     /*
@@ -140,18 +145,24 @@ class OSDMeasure {
      * Adjusts the sizes of all fabric.js objects based on zoom
      */
     adjustToZoom() {
-        let zoom = this.viewer.viewport.getZoom();
-        var tiledImage = viewer.world.getItemAt(0); // Assuming you just have a single image in the viewer
-        zoom = zoom/(tiledImage.source.dimensions.x/2592); ////Adjust based on scan size
 
-        for (let i = 0; i < this.measurements.length; i++) {
-            this.measurements[i].adjustToZoom(zoom);
+        try{
+            let zoom = this.viewer.viewport.getZoom();
+            var tiledImage = viewer.world.getItemAt(0); // Assuming you just have a single image in the viewer
+            zoom = zoom/(tiledImage.source.dimensions.x/2592); ////Adjust based on scan size
+
+            for (let i = 0; i < this.measurements.length; i++) {
+                this.measurements[i].adjustToZoom(zoom);
+            }
+            if (this.p1 != null) {
+                this.p1.adjustToZoom(zoom);
+            }
+            if (this.p2 != null) {
+                this.p2.adjustToZoom(zoom);
+            }
         }
-        if (this.p1 != null) {
-            this.p1.adjustToZoom(zoom);
-        }
-        if (this.p2 != null) {
-            this.p2.adjustToZoom(zoom);
+        catch(error){
+            console.error('Error adjusting measurement zoom:', error);
         }
     }
 
